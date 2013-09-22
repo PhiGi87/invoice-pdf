@@ -29,11 +29,11 @@ class Invoice_Receipt_PDF extends FPDF {
         //because addpage calls setfont and if no font is set the result is error.
         $this->SetFont('Helvetica', '', 9);
         $this->AddPage('P', 'A4');
-        $this->SetMargins(15, 16, 15);
+        $this->SetMargins(15, 5, 15);
         $this->SetAutoPageBreak(true);
 
         $this->footerPosition = $this->h - $this->bMargin - 30;
-        $this->PageBreakTrigger = $this->footerPosition;
+        $this->PageBreakTrigger = $this->footerPosition - 10;
     }
 
     public function generate() {
@@ -147,9 +147,9 @@ class Invoice_Receipt_PDF extends FPDF {
         $this->Text($this->GetX(), $this->GetY(), 'ALV %', true, 9);
         $this->SetX($this->GetX() + 20);
         $this->Text($this->GetX(), $this->GetY(), 'á', true, 9);
-        $this->SetX($this->GetX() + 10);
-        $this->Text($this->GetX(), $this->GetY(), 'alv', true, 9);
         $this->SetX($this->GetX() + 15);
+        $this->Text($this->GetX(), $this->GetY(), 'alv', true, 9);
+        $this->SetX($this->GetX() + 10);
         $this->Text($this->GetX(), $this->GetY(), 'Kpl', true, 9);
         $this->SetX($this->GetX() + 15);
         $this->Text($this->GetX(), $this->GetY(), 'Summa', true, 9);
@@ -157,14 +157,16 @@ class Invoice_Receipt_PDF extends FPDF {
         $this->SetY($this->GetY() + 10);
 
         foreach ($this->sales as $sale) {
+            //X needs to be incremented by 2, otherwise rows get printed a little bit too much right
+            $this->SetX($this->GetX() - 2);
             //Rows are printed with Cell so that autopagebreak works
-            $this->Cell(20, 5, $sale['sellDate']);
-            $this->Cell(90, 5, $sale['productName']);
-            $this->Cell(18, 5, $sale['vatPercent']);
-            $this->Cell(12, 5, $sale['price']);
-            $this->Cell(15, 5, $sale['vatSum']);
-            $this->Cell(15, 5, $sale['quantity']);
-            $this->Cell(15, 5, $sale['sum']);
+            $this->Cell(20, 5, $sale['sellDate'], 0, 0, 'L');
+            $this->Cell(93, 5, $sale['productName']);
+            $this->Cell(5, 5, $sale['vatPercent']);
+            $this->Cell(19, 5, number_format($sale['price']*100, 2), 0, 0, 'R');
+            $this->Cell(17, 5, number_format($sale['vatSum'], 2), 0, 0, 'R');
+            $this->Cell(9, 5, $sale['quantity'], 0, 0, 'R');
+            $this->Cell(23, 5, number_format($sale['sum'], 2), 0, 0, 'R');
             $this->SetY($this->GetY() + 10);
         }
     }
@@ -202,7 +204,7 @@ class Invoice_Receipt_PDF extends FPDF {
 
         $this->Text($this->GetX(), $this->GetY(), 'Yht. EUR', true, 9);
         $this->SetX($this->GetX() + 15);
-        $this->Text($this->GetX(), $this->GetY(), $this->sums['total'], true, 9);
+        $this->Text($this->GetX(), $this->GetY(), number_format($this->sums['total'], 2), true, 9);
     }
 
     private function jobReports() {
@@ -278,9 +280,9 @@ class Invoice_Receipt_PDF extends FPDF {
         $this->Text($this->GetX(), $this->GetY(), $headerText, true, 21);
 
         //This line needs to be here so that autopagebreak starts printing from right y-coordinate
-        $this->SetY($this->GetY() + 15);
+        $this->SetY($this->GetY() + 10);
 
-        $this->Text(190, 15, $this->PageNo() . '/{nb}', false, 12);
+        $this->Text(190, 15, $this->PageNo() . ' ({nb})', false, 9);
     }
 
     /**
